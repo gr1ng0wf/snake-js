@@ -6,38 +6,42 @@
 
 html, body {
   font-family: Nunito;
-  font-size: 21px;
-  background: #fff;
-  color: #3d4852;
+  font-size: 16px;
+  background: #232323;
+  color: #fff;  
   padding: 0;
   margin: 0;
 }
 
-#game {
-  background: #fff;
-  position: absolute;
-  top: 50%;
+#game > .overlay {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+#game > canvas {
   left: 50%;
+  top: 50%;
+  position: absolute;
   transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
 }
 
 p.score {
-  font-weight: 600;
-  padding: 5px 12px;
+  font-weight: 300;
 }
+
 #score {
   font-weight: 900;
-  color: #a779e9;
+  color: #00c832;
 }
 
 .footer {
   font-size: 16px;
-  text-align: center;
+  text-align: right;
 }
 .footer a {
   font-size: 14px;
-  color: #a779e9;
+  color: #00c832;
   text-decoration: none;
 }

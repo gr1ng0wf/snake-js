@@ -1,9 +1,19 @@
 /* colors constants */
 const colors = {
-  bg: "#f8f8f8",
-  snake: "#33aa33",
-  apple: "#CA0000",
+	bg: "#000",
+	snake: {
+	  fill: "#00c832",
+	  stroke: "#00000050",
+	  shadow: "#00DD50",
+	},
+	apple: {
+	  fill: "#ff3200",
+	  stroke: "#00000050",
+	  shadow: "#d50000",
+  },   
 };
+
+const shadowBlur = 10;
 
 /* game controls */
 const controls = {
@@ -27,14 +37,28 @@ const DOWN = { x: 0, y: 1 };
 const LEFT = { x: -1, y: 0 };
 const RIGHT = { x: 1, y: 0 };
 
-/* size (col, row) */
-const cols = 10;
-const rows = 10;
-
 /* init context */
 var cnv = document.getElementById("canvas");
 var ctx = cnv.getContext("2d");
-cnv.height = cnv.width = 600;
+
+cnv.height = document.body.clientHeight;
+cnv.width = document.body.clientWidth; 
+
+
+
+window.addEventListener("resize", () => {
+  cnv.height = document.body.clientHeight;
+  cnv.width = document.body.clientWidth; 
+  /* update stataments */
+  cols = Math.floor(cnv.width / 40);
+  rows = Math.floor(cnv.height / 40);
+});
+
+
+
+/* size (col, row) */
+let cols = Math.floor(cnv.width / 40);
+let rows = Math.floor(cnv.height / 40);
 
 /* random function */
 const rnd = function(min, max) {
@@ -51,18 +75,19 @@ const validMove = function(move) {
 var state = {
   snake: [],
   move: LEFT,
-  speed: 550,
+  speed: 320,
   score: 0,
-  apple: { x: null, y: null }
+  apple: [],
 };
 state.snake.push({x: rnd(0, cols), y: rnd(0, rows)});
 
 const sizeMatrix= cols * rows;
 function createApple() {
   if(state.snake.length >= sizeMatrix) return 0;
-  state.apple = { x: rnd(0, cols), y: rnd(0, rows) };
+  state.apple.push({x: rnd(0, cols), y: rnd(0, rows)});
   state.snake.forEach(pos => {
-    if(pos.x == state.apple.x && pos.y == state.apple.y) return createApple();
+    const fetchRes = (state.apple).filter((apple) => { return (pos.x == apple.x && pos.y == apple.y); });
+    if(fetchRes.length) return createApple();
   });
   return 0;
 }
@@ -85,7 +110,6 @@ const validKey = function(keyCode) {
 
 /* key press controller*/
 document.onkeydown = function(e) {
-  console.log(e.keyCode);
   switch (validKey(e.keyCode)) {
     case action.UP: if(validMove(UP)) state.move = UP; break;
     case action.DOWN: if(validMove(DOWN)) state.move = DOWN; break;
@@ -95,15 +119,23 @@ document.onkeydown = function(e) {
 };
 
 const eatApple = function() {
-  if(state.snake[0].x == state.apple.x &&
-    state.snake[0].y == state.apple.y) {
-      createApple();
-      state.score++;
-      state.speed = (state.speed > 60) ? (state.speed - 10) : (state.speed);
-      document.getElementById("score").innerHTML = state.score;
-      return 1;
+  const fetchRes = (state.apple).filter((apple) => { return (state.snake[0].x == apple.x && state.snake[0].y == apple.y); });
+  if(fetchRes.length) {
+
+    for(let index in fetchRes) {
+      state.apple.splice(index, 1)
+    };
+  
+    createApple();
+    state.score++;
+    if(state.speed > 70) {
+      state.speed -= 15;
     }
-  return 0;
+    document.getElementById("score").innerHTML = state.score;
+    return 1;
+  } else {
+    return 0;
+  }
 };
 
 /* snake move function */
@@ -128,6 +160,21 @@ const endGameAction = function() {
 const x = c => Math.round(c * cnv.width / cols)
 const y = r => Math.round(r * cnv.height / rows)
 
+const drawWithShadow = (colors, elements) => {
+  ctx.lineWidth = 1;
+	ctx.fillStyle = colors.fill;
+  ctx.strokeStyle = colors.stroke;
+  ctx.shadowColor = colors.shadow;
+  ctx.shadowBlur = shadowBlur;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  elements.map(pos => {
+    ctx.fillRect(x(pos.x), y(pos.y), x(1), y(1));
+    ctx.strokeRect(x(pos.x), y(pos.y), x(1), y(1));
+  });
+};
+
 /* draw game field */
 const draw = function() {
   /* clear game field*/
@@ -135,20 +182,11 @@ const draw = function() {
   ctx.fillRect(0, 0, cnv.width, cnv.height);
 
   /* draw snake */
-  ctx.fillStyle = colors.snake;
-  ctx.strokeStyle = colors.bg;
-  state.snake.map(pos => {
-    ctx.fillRect(x(pos.x), y(pos.y), x(1), y(1));
-    ctx.strokeRect(x(pos.x), y(pos.y), x(1), y(1));
-  });
+  drawWithShadow(colors.snake, state.snake);
 
   /* draw apple */
-  ctx.fillStyle = colors.apple;
-  ctx.strokeStyle = colors.bg;
-  ctx.fillRect(x(state.apple.x), y(state.apple.y), x(1), y(1));
-  ctx.strokeRect(x(state.apple.x), y(state.apple.y), x(1), y(1));
+  drawWithShadow(colors.apple, state.apple);
 };
-draw();
 
 /* init game loop */
 var gameLoop = function() {
